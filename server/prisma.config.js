@@ -11,6 +11,12 @@ try {
 }
 
 function resolveUrl(url) {
+  url = url.trim();
+  if (/^postgres(ql)?:/.test(url)) {
+    const u = new URL(url);
+    u.searchParams.delete("channel_binding"); // Neon lo agrega; no hace falta
+    url = u.toString();
+  }
   // Las rutas SQLite relativas se resuelven desde la carpeta server/.
   if (url.startsWith("file:") && !path.isAbsolute(url.slice(5))) {
     return "file:" + path.resolve(here, url.slice(5));

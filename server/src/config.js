@@ -21,7 +21,16 @@ if (!jwtSecret || jwtSecret.startsWith("cambia-este")) {
   console.warn("⚠  JWT_SECRET no definido: usando un secreto de desarrollo.");
 }
 
+// Quita parámetros que el controlador no necesita (Neon agrega channel_binding=require).
+export function cleanDatabaseUrl(url) {
+  if (!/^postgres(ql)?:/.test(url)) return url;
+  const u = new URL(url);
+  u.searchParams.delete("channel_binding");
+  return u.toString();
+}
+
 function resolveDatabaseUrl(url) {
+  url = cleanDatabaseUrl(url.trim());
   if (url.startsWith("file:")) {
     const file = url.slice(5);
     return "file:" + (path.isAbsolute(file) ? file : path.resolve(SERVER_ROOT, file));

@@ -86,7 +86,7 @@ La primera vez se abrirá una ventana del navegador para iniciar sesión en GitH
 ## Paso 3. Crea la base de datos en Neon
 
 1. Entra a https://neon.com y regístrate (puedes usar tu cuenta de GitHub).
-2. Crea un proyecto: nombre `rutatech`, versión de Postgres la que venga por defecto, y la región más cercana a la de Render que vas a elegir (por ejemplo, *AWS US East (Ohio)* si usarás Render en Ohio).
+2. Crea un proyecto: nombre `rutatech`, versión de Postgres la que venga por defecto, y la región **AWS US East 2 (Ohio)**, que coincide con la región configurada para Render en `render.yaml`.
 3. En el panel del proyecto, haz clic en **Connect**.
 4. **Desactiva** la opción **Connection pooling** y copia la cadena de conexión. Se parece a:
 
@@ -94,7 +94,7 @@ La primera vez se abrirá una ventana del navegador para iniciar sesión en GitH
    postgresql://neondb_owner:CLAVE@ep-xxxx.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
    ```
 
-5. Borra el final `&channel_binding=require` y deja `?sslmode=require`. Guarda esta cadena en un lugar seguro: es la llave de tu base de datos. **Nunca la subas a GitHub.**
+5. Puedes pegarla tal cual: la app ignora el `&channel_binding=require` del final. Guarda esta cadena en un lugar seguro: es la llave de tu base de datos. **Nunca la subas a GitHub.**
 
 ## Paso 4. Publica la app en Render
 
@@ -160,7 +160,7 @@ Revisa las condiciones vigentes en las páginas de precios de cada servicio, por
 | `git` o `node` "no se reconoce como comando" | Cierra y abre PowerShell. Si sigue, reinstala marcando la opción de agregar al PATH. |
 | `git push` dice `rejected` o `fetch first` | Creaste el repositorio con README. Ejecuta `git pull origin main --allow-unrelated-histories`, luego `git push`. |
 | `git push` dice que expone tu correo (`GH007`) | Usa el correo `@users.noreply.github.com` del paso 2.1, luego `git commit --amend --reset-author --no-edit` y `git push`. |
-| En Render: `Can't reach database server` | Revisa que `DATABASE_URL` sea la cadena **sin pooling** y que termine en `?sslmode=require`. |
+| En Render: `Can't reach database server` | Revisa que `DATABASE_URL` sea la cadena **sin pooling** (el host no debe contener `-pooler`) e incluya `sslmode=require`. |
 | La página carga pero no puedo iniciar sesión | Revisa que `CLIENT_URL` coincida exactamente con la dirección de Render (con `https://` y sin `/` al final). |
 | El primer acceso tarda un minuto | Es normal en el plan gratuito: el servicio estaba dormido. |
 | Los retos de Python no cargan | La red bloquea `cdn.jsdelivr.net`. Ver "Python sin acceso a internet externo" en el README. |

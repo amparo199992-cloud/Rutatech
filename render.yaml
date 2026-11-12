@@ -6,6 +6,7 @@ services:
     name: rutatech
     runtime: node
     plan: free
+    region: ohio # misma región que la base de datos en Neon (AWS US East 2)
     buildCommand: npm run render-build
     startCommand: npm run render-start
     healthCheckPath: /api/health
