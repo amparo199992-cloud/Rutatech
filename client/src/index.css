@@ -1,0 +1,156 @@
+@import "tailwindcss";
+@import "@fontsource-variable/atkinson-hyperlegible-next";
+@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource-variable/jetbrains-mono";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Tokens de diseño de RutaTech */
+@theme {
+  --font-sans: "Atkinson Hyperlegible Next Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "Cascadia Code", monospace;
+
+  --color-paper: #f6f8fb;
+  --color-ink: #13203b;
+  --color-night: #0e1528;
+  --color-night-2: #162039;
+  --color-night-3: #22305a;
+  --color-cobalt-50: #eef2ff;
+  --color-cobalt-100: #dce4fd;
+  --color-cobalt-300: #8ea3f2;
+  --color-cobalt-400: #6681ee;
+  --color-cobalt-500: #2448d8;
+  --color-cobalt-600: #1c3bb8;
+  --color-cobalt-700: #172f91;
+  --color-signal: #f4b400;
+  --color-signal-50: #fff7db;
+  --color-mint-500: #12a58a;
+  --color-mint-700: #0b7562;
+  --color-mint-50: #e3f7f2;
+  --color-line: #dde3ee;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-paper font-sans text-[1.0625rem] leading-relaxed text-ink antialiased dark:bg-night dark:text-slate-100;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight text-balance;
+  }
+  :focus-visible {
+    @apply outline-3 outline-offset-2 outline-cobalt-500 dark:outline-cobalt-300;
+  }
+  ::selection {
+    @apply bg-signal text-ink;
+  }
+}
+
+/* Contenido de las lecciones (Markdown) */
+.prose-ruta {
+  max-width: 68ch;
+  @apply text-[1.0625rem] leading-[1.75];
+}
+.prose-ruta > * + * {
+  @apply mt-4;
+}
+.prose-ruta h2 {
+  @apply mt-2 text-3xl font-bold;
+}
+.prose-ruta h3 {
+  @apply mt-8 text-xl font-semibold;
+}
+.prose-ruta a {
+  @apply font-medium text-cobalt-600 underline underline-offset-2 dark:text-cobalt-300;
+}
+.prose-ruta ul {
+  @apply list-disc space-y-1 pl-6;
+}
+.prose-ruta ol {
+  @apply list-decimal space-y-1 pl-6;
+}
+.prose-ruta strong {
+  @apply font-bold;
+}
+.prose-ruta blockquote {
+  @apply rounded-r-lg border-l-4 border-signal bg-signal-50 px-4 py-3 dark:bg-night-2;
+}
+.prose-ruta :not(pre) > code {
+  @apply rounded bg-cobalt-50 px-1.5 py-0.5 font-mono text-[0.9em] text-cobalt-700 dark:bg-night-3 dark:text-cobalt-100;
+}
+.prose-ruta pre {
+  @apply overflow-x-auto rounded-xl bg-[#101a33] p-4 font-mono text-[0.9rem] leading-relaxed text-slate-100;
+}
+.prose-ruta table {
+  @apply block w-full overflow-x-auto border-collapse text-[0.95rem];
+}
+.prose-ruta th {
+  @apply border-b-2 border-line px-3 py-2 text-left font-semibold dark:border-night-3;
+}
+.prose-ruta td {
+  @apply border-b border-line px-3 py-2 align-top dark:border-night-3;
+}
+
+/* Única animación orquestada: la línea de la ruta se dibuja al cargar la portada */
+@keyframes draw-line {
+  from {
+    stroke-dashoffset: var(--len);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes station-pop {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.route-draw {
+  stroke-dasharray: var(--len);
+  animation: draw-line 1.6s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+.station-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: station-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.toast-in {
+  animation: toast-in 0.2s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .route-draw,
+  .station-pop,
+  .toast-in {
+    animation: none;
+  }
+}
+
+/* Sin ligaduras en el código: un principiante debe ver "=>" y "===" tal como se escriben */
+code,
+pre,
+kbd,
+samp,
+textarea,
+.font-mono {
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}

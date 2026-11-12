@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Entorno aislado de RutaTech</title>
+  </head>
+  <body>
+    <!--
+      Esta página se carga dentro de un iframe con sandbox="allow-scripts" (origen opaco):
+      el código de los retos no puede leer cookies, ni la sesión, ni la página principal.
+      El código se ejecuta en un Web Worker para poder detenerlo si entra en un bucle infinito.
+    -->
+    <script src="/sandbox-runner.js"></script>
+  </body>
+</html>

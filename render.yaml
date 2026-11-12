@@ -1,0 +1,36 @@
+# Despliegue en Render (Blueprint): un servicio web que sirve la API y el frontend.
+# La base de datos PostgreSQL va aparte (por ejemplo, Neon, que tiene plan gratuito sin vencimiento).
+# Las bases gratuitas de Render vencen a los 30 días y luego se borran: no las uses para datos reales.
+services:
+  - type: web
+    name: rutatech
+    runtime: node
+    plan: free
+    buildCommand: npm run render-build
+    startCommand: npm run render-start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: APP_TIMEZONE
+        value: America/Bogota
+      # Render te pedirá estos valores al crear el servicio:
+      - key: DATABASE_URL
+        sync: false
+      - key: CLIENT_URL
+        sync: false
+      - key: SITE_URL
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # Opcional, para enviar correos de recuperación de contraseña:
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        sync: false

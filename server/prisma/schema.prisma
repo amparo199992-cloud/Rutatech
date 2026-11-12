@@ -1,0 +1,290 @@
+// Esquema de base de datos de RutaTech.
+// Por defecto usa SQLite (archivo local, ideal para empezar).
+// Para producción con PostgreSQL ejecuta: npm run db:use-postgres
+// Las listas y objetos (objetivos, opciones, recursos...) se guardan como
+// texto JSON para que el esquema funcione igual en SQLite y PostgreSQL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ───────────── Usuarios y autenticación ─────────────
+
+model User {
+  id                 Int       @id @default(autoincrement())
+  name               String
+  email              String    @unique
+  passwordHash       String
+  role               String    @default("USER") // USER | ADMIN
+  bio                String?
+  goal               String? // meta personal: "conseguir mi primer empleo", etc.
+  weeklyHours        Int       @default(6)
+  specializationSlug String?
+  points             Int       @default(0)
+  streak             Int       @default(0)
+  longestStreak      Int       @default(0)
+  lastActiveDay      String? // AAAA-MM-DD en la zona horaria de la app
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  lessonProgress     LessonProgress[]
+  quizAttempts       QuizAttempt[]
+  exerciseResults    ExerciseResult[]
+  projectSubmissions ProjectSubmission[]
+  badges             UserBadge[]
+  activities         Activity[]
+  checklists         ChecklistProgress[]
+  resetTokens        PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ───────────── Contenido de la ruta ─────────────
+
+model Stage {
+  id               Int       @id @default(autoincrement())
+  slug             String    @unique
+  order            Int
+  title            String
+  subtitle         String?
+  description      String
+  duration         String
+  icon             String?
+  isSpecialization Boolean   @default(false)
+  modules          Module[]
+  projects         Project[]
+}
+
+model Specialization {
+  id           Int      @id @default(autoincrement())
+  slug         String   @unique
+  order        Int
+  title        String
+  description  String
+  duration     String
+  icon         String?
+  skills       String   @default("[]") // JSON: string[]
+  technologies String   @default("[]") // JSON: string[]
+  roles        String   @default("[]") // JSON: string[]
+  projectIdeas String   @default("[]") // JSON: string[]
+  resources    String   @default("[]") // JSON: {title,url,lang,description}[]
+  modules      Module[]
+}
+
+model Module {
+  id               Int             @id @default(autoincrement())
+  slug             String          @unique
+  stageId          Int
+  specializationId Int?
+  order            Int
+  title            String
+  description      String
+  duration         String
+  level            String          @default("principiante") // principiante | intermedio | avanzado
+  objectives       String          @default("[]") // JSON: string[]
+  checklist        String          @default("[]") // JSON: string[]
+  resources        String          @default("[]") // JSON: {title,url,lang}[]
+  published        Boolean         @default(true)
+  stage            Stage           @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  specialization   Specialization? @relation(fields: [specializationId], references: [id], onDelete: SetNull)
+  lessons          Lesson[]
+  questions        QuizQuestion[]
+  quizAttempts     QuizAttempt[]
+  checklists       ChecklistProgress[]
+
+  @@index([stageId])
+}
+
+model Lesson {
+  id        Int              @id @default(autoincrement())
+  slug      String           @unique
+  moduleId  Int
+  order     Int
+  title     String
+  summary   String?
+  content   String // Markdown
+  minutes   Int              @default(15)
+  module    Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  exercises Exercise[]
+  progress  LessonProgress[]
+
+  @@index([moduleId])
+}
+
+// Tipos: choice (opción múltiple) | fill (completar código) |
+//        output (¿qué imprime?) | challenge (reto con pruebas automáticas)
+model Exercise {
+  id          Int              @id @default(autoincrement())
+  key         String           @unique
+  lessonId    Int
+  order       Int
+  type        String
+  prompt      String
+  data        String           @default("{}") // JSON público (opciones, código, pruebas)
+  answer      String           @default("{}") // JSON privado (nunca se envía al navegador)
+  explanation String
+  points      Int              @default(5)
+  lesson      Lesson           @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  results     ExerciseResult[]
+
+  @@index([lessonId])
+}
+
+model QuizQuestion {
+  id           Int    @id @default(autoincrement())
+  key          String @unique
+  moduleId     Int
+  order        Int
+  question     String
+  options      String // JSON: string[]
+  correctIndex Int
+  explanation  String
+  module       Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([moduleId])
+}
+
+model Project {
+  id             Int                 @id @default(autoincrement())
+  slug           String              @unique
+  stageId        Int?
+  specialization String? // slug de la especialización, si aplica
+  order          Int
+  title          String
+  summary        String
+  difficulty     String              @default("principiante")
+  estimatedHours Int                 @default(6)
+  technologies   String              @default("[]") // JSON: string[]
+  steps          String              @default("[]") // JSON: string[]
+  criteria       String              @default("[]") // JSON: string[]
+  improvements   String              @default("[]") // JSON: string[]
+  stage          Stage?              @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  submissions    ProjectSubmission[]
+}
+
+model Resource {
+  id          Int     @id @default(autoincrement())
+  order       Int     @default(0)
+  title       String
+  description String
+  url         String
+  level       String
+  language    String
+  category    String
+  provider    String
+  free        Boolean @default(true)
+}
+
+// ───────────── Progreso y gamificación ─────────────
+
+model LessonProgress {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  lessonId    Int
+  completedAt DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}
+
+model ExerciseResult {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  exerciseId Int
+  correct    Boolean  @default(false)
+  attempts   Int      @default(0)
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, exerciseId])
+}
+
+model QuizAttempt {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  moduleId  Int
+  score     Int
+  total     Int
+  passed    Boolean
+  answers   String // JSON: number[]
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([userId, moduleId])
+}
+
+model ChecklistProgress {
+  id       Int    @id @default(autoincrement())
+  userId   Int
+  moduleId Int
+  checked  String @default("[]") // JSON: number[] (índices marcados)
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module   Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, moduleId])
+}
+
+model ProjectSubmission {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  projectId   Int
+  repoUrl     String
+  notes       String?
+  status      String    @default("submitted") // submitted | completed
+  submittedAt DateTime  @default(now())
+  completedAt DateTime?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+}
+
+model Badge {
+  id          Int         @id @default(autoincrement())
+  code        String      @unique
+  name        String
+  description String
+  icon        String
+  order       Int         @default(0)
+  users       UserBadge[]
+}
+
+model UserBadge {
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  badgeId  Int
+  earnedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge    Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+}
+
+model Activity {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String // lesson | exercise | quiz | project | badge | specialization
+  message   String
+  points    Int      @default(0)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}

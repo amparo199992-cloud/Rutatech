@@ -1,0 +1,21 @@
+{
+  "name": "rutatech",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RutaTech: plataforma de aprendizaje guiado de tecnología para principiantes",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "setup": "node scripts/setup.js",
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "build": "npm install --prefix server && npm install --prefix client --include=dev && npm run build --prefix client",
+    "start": "npm start --prefix server",
+    "test": "npm test --prefix server",
+    "render-build": "node server/scripts/switch-provider.js postgresql && npm run build",
+    "render-start": "npm run db:deploy --prefix server && npm start --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.7"
+  }
+}
